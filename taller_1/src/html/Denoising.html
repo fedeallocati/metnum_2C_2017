@@ -1,0 +1,233 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Denoising</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-09-03"><meta name="DC.source" content="Denoising.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">leo imagen de entrada</a></li><li><a href="#2">agrego ruido</a></li><li><a href="#3">Armado del sistema</a></li><li><a href="#4">Resolucion del sistema</a></li><li><a href="#5">calculo psnr</a></li><li><a href="#6">De yapa</a></li></ul></div><h2 id="1">leo imagen de entrada</h2><pre class="codeinput">close <span class="string">all</span>, clear <span class="string">all</span>;
+name = <span class="string">'peppers'</span>;
+I = imread(strcat(<span class="string">'../Senales/256x256/'</span>, name, <span class="string">'.pgm'</span>));
+figure,imshow(I),title(<span class="string">'Imagen original'</span>);
+</pre><img vspace="5" hspace="5" src="Denoising_01.png" alt=""> <h2 id="2">agrego ruido</h2><pre class="codeinput">tipo_de_ruido = <span class="string">'salt&amp;pepper'</span>;
+<span class="keyword">if</span> strcmp(tipo_de_ruido,<span class="string">'salt&amp;pepper'</span>)
+    IR = imnoise(I,<span class="string">'salt &amp; pepper'</span>);
+<span class="keyword">elseif</span> strcmp(tipo_de_ruido,<span class="string">'uniforme'</span>)
+    sr = 64; <span class="comment">% a partir de 64 (aprox) el filtrado vale la pena</span>
+    IR = double(I) + randi([-sr,sr], size(I));
+    IR = uint8(IR);
+<span class="keyword">elseif</span> strcmp(tipo_de_ruido, <span class="string">'gaussiano'</span>)
+    IR = imnoise(I,<span class="string">'gaussian'</span>);
+    [p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+<span class="keyword">elseif</span> strcmp(tipo_de_ruido, <span class="string">'speckle'</span>)
+    IR = imnoise(I,<span class="string">'speckle'</span>);
+    [p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+<span class="keyword">else</span>
+    IR = zeros(size(I));
+<span class="keyword">end</span>
+[p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+imwrite(IR,strcat(<span class="string">'../Resultados/'</span>, name, <span class="string">'-'</span>, tipo_de_ruido, <span class="string">'.png'</span>))
+figure,imshow(IR),title([<span class="string">'Imagen ruidosa'</span>]);
+
+dif = double(I)-double(IR);
+minimum = min(min(dif));
+dif = dif - minimum;
+maximum = max(max(dif));
+dif = dif ./ maximum;
+dif = uint8(dif*255);
+imwrite(dif,strcat(<span class="string">'../Resultados/'</span>, name, <span class="string">'-'</span>, tipo_de_ruido, <span class="string">'-dif.png'</span>))
+figure,imshow(dif),title([<span class="string">'Diferencia'</span>]);
+</pre><img vspace="5" hspace="5" src="Denoising_02.png" alt=""> <img vspace="5" hspace="5" src="Denoising_03.png" alt=""> <h2 id="3">Armado del sistema</h2><pre class="codeinput">Lambda = 1;
+Dim = size(IR);
+NInc = prod(Dim);
+
+<span class="comment">% Armado del vector resultado</span>
+Utilde = Lambda*double(IR(:));
+
+<span class="comment">% Armado de la matriz a resolver</span>
+B = -1*ones(NInc,5);
+B(:,3) = (Lambda+4)*ones(NInc,1);
+d = [-Dim(1) -1 0 1 Dim(1)];
+A = spdiags(B,d,NInc,NInc);
+</pre><h2 id="4">Resolucion del sistema</h2><pre class="codeinput"><span class="comment">% Resolucion directa</span>
+Usol = A\Utilde;
+
+<span class="comment">% Resolucion cholesky de matlab</span>
+L = chol(A,<span class="string">'lower'</span>);
+Usol = L'\(L\Utilde);
+
+<span class="comment">% Escalamiento y reshape para mostrar la imagen</span>
+Usol = Usol - min(Usol);
+Usol = Usol / max(Usol);
+Usol = uint8(Usol*255);
+IFS = reshape(Usol,Dim);
+
+figure,imshow([I,IR,IFS]),title([<span class="string">'Imagen filtrada, lambda='</span> num2str(Lambda)]);
+imwrite(IFS,strcat(<span class="string">'../Resultados/'</span>, name, <span class="string">'-out-'</span>, tipo_de_ruido, <span class="string">'.png'</span>))
+</pre><img vspace="5" hspace="5" src="Denoising_04.png" alt=""> <h2 id="5">calculo psnr</h2><pre class="codeinput">[p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+
+fprintf(<span class="string">'Calidad imagen ruidosa.\n'</span>);
+fprintf(<span class="string">'PSNR=%g, ECM=%g\n'</span>,p,m);
+
+[p,m] = psnr(I(2:end-1,2:end-1), IFS(2:end-1,2:end-1));
+fprintf(<span class="string">'Calidad imagen filtrada.\n'</span>);
+fprintf(<span class="string">'PSNR=%g, ECM=%g\n'</span>,p,m);
+</pre><pre class="codeoutput">Calidad imagen ruidosa.
+PSNR=18.1934, ECM=985.68
+Calidad imagen filtrada.
+PSNR=22.2253, ECM=389.543
+</pre><h2 id="6">De yapa</h2><pre class="codeinput">figure;
+S1 = edge(I,<span class="string">'canny'</span>);
+S2 = edge(IR,<span class="string">'canny'</span>);
+S3 = edge(IFS,<span class="string">'canny'</span>);
+imshow([S1,S2,S3]);
+</pre><img vspace="5" hspace="5" src="Denoising_05.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% leo imagen de entrada
+close all, clear all;
+name = 'peppers';
+I = imread(strcat('../Senales/256x256/', name, '.pgm'));
+figure,imshow(I),title('Imagen original');
+
+%% agrego ruido
+tipo_de_ruido = 'salt&pepper';
+if strcmp(tipo_de_ruido,'salt&pepper')
+    IR = imnoise(I,'salt & pepper');
+elseif strcmp(tipo_de_ruido,'uniforme')
+    sr = 64; % a partir de 64 (aprox) el filtrado vale la pena
+    IR = double(I) + randi([-sr,sr], size(I));
+    IR = uint8(IR);
+elseif strcmp(tipo_de_ruido, 'gaussiano')
+    IR = imnoise(I,'gaussian');
+    [p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+elseif strcmp(tipo_de_ruido, 'speckle')
+    IR = imnoise(I,'speckle');
+    [p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+else
+    IR = zeros(size(I));
+end
+[p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+imwrite(IR,strcat('../Resultados/', name, '-', tipo_de_ruido, '.png'))
+figure,imshow(IR),title(['Imagen ruidosa']);
+
+dif = double(I)-double(IR);
+minimum = min(min(dif));
+dif = dif - minimum;
+maximum = max(max(dif));
+dif = dif ./ maximum;
+dif = uint8(dif*255);
+imwrite(dif,strcat('../Resultados/', name, '-', tipo_de_ruido, '-dif.png'))
+figure,imshow(dif),title(['Diferencia']);
+
+%% Armado del sistema
+Lambda = 1;
+Dim = size(IR);
+NInc = prod(Dim);
+
+% Armado del vector resultado
+Utilde = Lambda*double(IR(:));
+
+% Armado de la matriz a resolver
+B = -1*ones(NInc,5);
+B(:,3) = (Lambda+4)*ones(NInc,1);
+d = [-Dim(1) -1 0 1 Dim(1)];
+A = spdiags(B,d,NInc,NInc);
+
+%% Resolucion del sistema
+
+% Resolucion directa
+Usol = A\Utilde;
+
+% Resolucion cholesky de matlab
+L = chol(A,'lower');
+Usol = L'\(L\Utilde);
+
+% Escalamiento y reshape para mostrar la imagen
+Usol = Usol - min(Usol);
+Usol = Usol / max(Usol);
+Usol = uint8(Usol*255);
+IFS = reshape(Usol,Dim);
+
+figure,imshow([I,IR,IFS]),title(['Imagen filtrada, lambda=' num2str(Lambda)]);
+imwrite(IFS,strcat('../Resultados/', name, '-out-', tipo_de_ruido, '.png'))
+
+%% calculo psnr
+[p,m] = psnr(I(2:end-1,2:end-1), IR(2:end-1,2:end-1));
+
+fprintf('Calidad imagen ruidosa.\n');
+fprintf('PSNR=%g, ECM=%g\n',p,m);
+
+[p,m] = psnr(I(2:end-1,2:end-1), IFS(2:end-1,2:end-1));
+fprintf('Calidad imagen filtrada.\n');
+fprintf('PSNR=%g, ECM=%g\n',p,m);
+
+%% De yapa
+figure;
+S1 = edge(I,'canny');
+S2 = edge(IR,'canny');
+S3 = edge(IFS,'canny');
+imshow([S1,S2,S3]);
+
+##### SOURCE END #####
+--></body></html>
