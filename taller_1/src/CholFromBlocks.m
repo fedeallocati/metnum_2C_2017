@@ -10,8 +10,8 @@ function L = CholFromBlocks(A)
     % Calculo todos los subbloques de L y U
     for i = 1:size(A,1)
         L11 = sqrt(Achol(i, i))
-        L21 = ____
-        L22xL22t = ____
+        L21 = Achol(i, i+1:size(Achol,2)) / L11
+        L22xL22t = Achol(i+1:size(Achol,1),i+1:size(Achol,2))-transpose(L21)*L21
 
         L(i,i) = L11;
         L(i+1:size(Achol,1),i) = L21;
