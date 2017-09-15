@@ -4,24 +4,18 @@ function Lch = CholFromLU(A)
     end
 
     % Conseguir factorizacion LU de A
-    [L,U,P] = lu(A)
-    % lu de Matlab hace permutaciones incluso 
-    % si no es necesario por estabilidad
-    % La siguiente multiplicación ajusta esto
-    Aperm = P*A*P;
+    [L,U] = LUFromBlocks(A);
 
     % Conseguir L de cholesky a partir de LU
-    D = diag(diag(U))
-    Lch = L * sqrt(D)
+    Lch = L * sqrt(U * inv(L'));
 
     % Codigo para chequar que dio bien
-    Ach = Lch*Lch'
-    for i = size(Aperm,1)
-        for j = size(Aperm,2)
-            if Aperm(i, j) ~= Ach(i, j)
+    Ach = Lch*Lch';
+    for i = size(A,1)
+        for j = size(A,2)
+            if abs(A(i,j)-Ach(i,j)) > 1e-4
                 error('no iguales')
             end
         end
     end
 end
-
