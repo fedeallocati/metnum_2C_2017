@@ -2,8 +2,7 @@ function ret = CheckOrtogonal(A)
 
 tic
 ret = 0;
-[m, n] = size(A);
-if A.' * A == eye(m,n)
+if A.' * A == eye(size(A))
 	ret = 1;
 end
 toc
