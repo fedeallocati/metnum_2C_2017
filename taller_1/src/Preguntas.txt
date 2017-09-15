@@ -13,4 +13,5 @@ Para cada vector, no nulo, z, tenemos que:
 z* M z > 0, si esto no se cumple, podremos decir que la matriz no es definida positiva.
 En caso que se cumpla para una muestra grande, podemos ganar confianza de que si lo es.
 
-3)
+3) Para determinar si una matriz es ortogonal, Multiplicamos la matriz A, por su transpuesta, si obtenemos la matriz identidad, entonces la matriz A es ortogonal.
+Si la matriz es ortogonal, las columnas son ortonormales de a pares, por lo que tomamos dos columnas al azar para obtener los vectores
