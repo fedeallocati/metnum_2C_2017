@@ -1,0 +1,16 @@
+Preguntas:
+
+1) ¿Bajo que condiciones podemos garantizar que una matriz tiene factorizacion LU?
+
+2)Enunciar un metodo basado en vectores aleatorios para mostrar que una matriz no es definida positiva o para ganar mas confianza en que si lo es
+
+3) Enunciar un metodo para determinar si una matriz es ortogonal o no
+
+1) La condicion suficiente para que una matriz A tenga factorizacion LU es que todos los menores principales de A sean no singulares. Los menores principales de una matriz A son los determinantes de un conjunto de submatrices cuadradas de A
+
+2) Sea M una matriz cuadrada de n x n, podemos ver que no es definida positiva, generando vectores aleatorios.
+Para cada vector, no nulo, z, tenemos que:
+z* M z > 0, si esto no se cumple, podremos decir que la matriz no es definida positiva.
+En caso que se cumpla para una muestra grande, podemos ganar confianza de que si lo es.
+
+3)
